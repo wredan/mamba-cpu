@@ -1,0 +1,6 @@
+packaging
+ninja
+einops
+transformers
+onnx
+onnxscript
