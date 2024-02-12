@@ -1,4 +1,4 @@
-from mamba_ssm.models.model_wrapper import ModelWrapper
+from mamba_ssm.onnx.model_wrapper import ModelWrapper
 import torch
 from transformers import AutoTokenizer
 
