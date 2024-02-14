@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 
 from mamba_ssm.models.config_mamba import MambaConfig
 from mamba_ssm.utils.generation import InferenceParams
@@ -53,6 +54,7 @@ class BlockModelWrapper(torch.nn.Module):
             device=device, 
             dtype=dtype
         )
+        self.model.eval()
         print(f"Size of d: {self.d_model}")
         print(f"Number of parameters: {sum(p.numel() for p in self.model.parameters() if p.requires_grad)}")
     
@@ -68,16 +70,21 @@ class BlockModelWrapper(torch.nn.Module):
 class MambaModelWrapper(torch.nn.Module):
     def __init__(self, config: MambaConfig=None, device='cpu', dtype=torch.float32):
         super(MambaModelWrapper, self).__init__() 
-        self.d_model = config.d_model
+        factory_kwargs = {"device": device, "dtype": dtype}
+
+        self.embedding = nn.Embedding(config.vocab_size, config.d_model, **factory_kwargs)
+
         self.model = Mamba(config.d_model, layer_idx=0, device=device, dtype=dtype)
-        print(f"Size of d: {self.d_model}")
+        self.model.eval()
+        print(f"Size of d: {config.d_model}")
         print(f"Number of parameters: {sum(p.numel() for p in self.model.parameters() if p.requires_grad)}")
     
-    def forward(self, input_ids, hidden_states):
-        
+    def forward(self, input_ids):
+
         batch_size, _ = input_ids.shape
         max_length = input_ids.shape[1] + 100
         dummy_inference_params = InferenceParams(max_seqlen=max_length, max_batch_size=batch_size)
+        hidden_states = self.embedding(input_ids)
 
         output = self.model(hidden_states, dummy_inference_params)
         return output

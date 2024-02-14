@@ -77,6 +77,7 @@ class Mamba(nn.Module):
         hidden_states: (B, L, D)
         Returns: same shape as hidden_states
         """
+        print(self.layer_idx, hidden_states.shape)
         batch, seqlen, dim = hidden_states.shape
 
         conv_state, ssm_state = self._get_states_from_cache(inference_params, batch)
@@ -141,12 +142,11 @@ class Mamba(nn.Module):
         dt, B, C = torch.split(x_db, [self.dt_rank, self.d_state, self.d_state], dim=-1)
         # Don't add dt_bias here
         dt = F.linear(dt, self.dt_proj.weight)  # (B d_inner)
-        dt = F.softplus(dt + self.dt_proj.bias.to(dtype=dt.dtype))
-
         A = -torch.exp(self.A_log.float())  # (d_inner, d_state)
 
         # SSM step
         # Discretize A and B
+        dt = F.softplus(dt + self.dt_proj.bias.to(dtype=dt.dtype))
         dA = torch.exp(torch.einsum("bd,dn->bdn", dt, A))
         dB = torch.einsum("bd,bn->bdn", dt, B)
         ssm_state.copy_(ssm_state * dA + rearrange(x, "b d -> b d 1") * dB)

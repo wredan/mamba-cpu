@@ -21,6 +21,6 @@ def test_model_with_custom_input(model_name, tokenizer_name, custom_prompt):
 if __name__ == "__main__":
     model_name = "state-spaces/mamba-130m" 
     tokenizer = "EleutherAI/gpt-neox-20b"
-    custom_prompt = "Hello, world!"
+    custom_prompt = "Harry potter is a wizard in "
     generated_text = test_model_with_custom_input(model_name, tokenizer, custom_prompt)
     print("Generated text:", generated_text)
