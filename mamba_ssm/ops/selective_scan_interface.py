@@ -25,7 +25,7 @@ def selective_scan(u, delta, A, B, C, D=None, z=None):
     C = C.float()
     delta = delta.float()
 
-    batch, seqlen, dim, dstate = u.shape[0], u.shape[2], A.shape[0], A.shape[1]
+    batch, seqlen, dim, dstate = u.size(0), u.size(2), A.size(0), A.size(1)
 
     x = A.new_zeros((batch, dim, dstate))
 

@@ -77,9 +77,9 @@ class Mamba(nn.Module):
         hidden_states: (B, L, D)
         Returns: same shape as hidden_states
         """
-        print(self.layer_idx, hidden_states.shape)
-        batch, seqlen, dim = hidden_states.shape
-
+        # print(self.layer_idx, hidden_states.shape)
+        batch  = hidden_states.size(0)
+        seqlen = hidden_states.size(1)
         conv_state, ssm_state = self._get_states_from_cache(inference_params, batch)
         if inference_params.seqlen_offset > 0:
             # The states are updated inplace
@@ -101,7 +101,7 @@ class Mamba(nn.Module):
         # Compute short convolution
         # If we just take x[:, :, -self.d_conv :], it will error if seqlen < self.d_conv
         # Instead F.pad will pad with zeros if seqlen < self.d_conv, and truncate otherwise.
-        conv_state.copy_(F.pad(x, (self.d_conv - x.shape[-1], 0)))  # Update state (B D W)
+        conv_state.copy_(F.pad(x, (self.d_conv - x.size(-1), 0)))  # Update state (B D W)
         x = self.act(self.conv1d(x)[..., :seqlen])
 
         # We're careful here about the layout, to avoid extra transposes.
@@ -126,7 +126,7 @@ class Mamba(nn.Module):
 
     def step(self, hidden_states, conv_state, ssm_state):
         dtype = hidden_states.dtype
-        assert hidden_states.shape[1] == 1, "Only support decoding with 1 token at a time for now"
+        assert hidden_states.size(1) == 1, "Only support decoding with 1 token at a time for now"
 
         xz = self.in_proj(hidden_states.squeeze(1))  # (B 2D)
         x, z = xz.chunk(2, dim=-1)  # (B D)

@@ -55,6 +55,9 @@ class BlockModelWrapper(torch.nn.Module):
             dtype=dtype
         )
         self.model.eval()
+        factory_kwargs = {"device": device, "dtype": dtype}
+
+        self.embedding = nn.Embedding(config.vocab_size, config.d_model, **factory_kwargs)
         print(f"Size of d: {self.d_model}")
         print(f"Number of parameters: {sum(p.numel() for p in self.model.parameters() if p.requires_grad)}")
     
@@ -63,9 +66,10 @@ class BlockModelWrapper(torch.nn.Module):
         batch_size, _ = input_ids.shape
         max_length = input_ids.shape[1] + 100
         dummy_inference_params = InferenceParams(max_seqlen=max_length, max_batch_size=batch_size)
+        hidden_states = self.embedding(input_ids)
 
-        output, _ = self.model(hidden_states, residual, dummy_inference_params)
-        return output
+        hidden_states, residual = self.model(hidden_states, residual, dummy_inference_params)
+        return hidden_states, residual
 
 class MambaModelWrapper(torch.nn.Module):
     def __init__(self, config: MambaConfig=None, device='cpu', dtype=torch.float32):
@@ -81,8 +85,8 @@ class MambaModelWrapper(torch.nn.Module):
     
     def forward(self, input_ids):
 
-        batch_size, _ = input_ids.shape
-        max_length = input_ids.shape[1] + 100
+        batch_size = input_ids.size(0)
+        max_length = input_ids.size(1) + 100
         dummy_inference_params = InferenceParams(max_seqlen=max_length, max_batch_size=batch_size)
         hidden_states = self.embedding(input_ids)
 
