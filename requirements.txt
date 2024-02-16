@@ -4,3 +4,4 @@ einops
 transformers
 onnx
 onnxscript
+onnxruntime
